@@ -7,25 +7,32 @@ import uuid
 from gtts import gTTS
 from dotenv import load_dotenv
 
-# Load environment variables
+# ✅ Load environment variables
 load_dotenv()
 
-# Get Together.AI API Key
-API_KEY = os.getenv("TOGETHER_API_KEY", "tgp_v1_CTRpbzaiygerdWVYDtUELAyHSom5OdKDDzn9DYWBMtk")  # Replace with actual key
+# ✅ Get Together.AI API Key (Ensure it's set in .env)
+API_KEY = os.getenv("TOGETHER_API_KEY")  
+if not API_KEY:
+    raise ValueError("TOGETHER_API_KEY is not set. Add it to a .env file.")
+
 API_URL = "https://api.together.xyz/v1/chat/completions"
 HEADERS = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
 
-# Initialize FastAPI app
+# ✅ Initialize FastAPI app
 app = FastAPI()
+
+# ✅ Ensure "static" directory exists for storing audio files
+if not os.path.exists("static"):
+    os.makedirs("static")
 
 # ✅ Mount the "static" directory to serve audio files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Define request model
+# ✅ Define request model
 class TextRequest(BaseModel):
     text: str
 
-# Function to simplify text using Together.AI
+# ✅ Function to simplify text using Together.AI
 def simplify_text(text: str):
     payload = {
         "model": "Qwen/Qwen2-VL-72B-Instruct",
@@ -67,4 +74,10 @@ def get_simplified_text(request: TextRequest):
 def get_simplified_audio(request: TextRequest):
     simplified_text = simplify_text(request.text)
     audio_url = text_to_speech(simplified_text)
-    return {"audio_url": audio_url}
+    return {"simplified_text": simplified_text, "audio_url": audio_url}
+
+# ✅ Run the app for Render (Dynamic Port Handling)
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))  # Default to 8000 if PORT is not set
+    uvicorn.run(app, host="0.0.0.0", port=port)
