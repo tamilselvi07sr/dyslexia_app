@@ -21,16 +21,22 @@ HEADERS = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/js
 # ✅ Initialize FastAPI app
 app = FastAPI()
 
-# ✅ Ensure "static" directory exists for storing audio files
-if not os.path.exists("static"):
-    os.makedirs("static")
+# ✅ Ensure "static" directory exists
+STATIC_DIR = os.path.join(os.getcwd(), "static")
+if not os.path.exists(STATIC_DIR):
+    os.makedirs(STATIC_DIR)
 
-# ✅ Mount the "static" directory to serve audio files
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# ✅ Mount static files directory for serving audio
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 # ✅ Define request model
 class TextRequest(BaseModel):
     text: str
+
+# ✅ Root route (IMPORTANT for Render)
+@app.get("/")
+def home():
+    return {"message": "Dyslexia App is running!"}
 
 # ✅ Function to simplify text using Together.AI
 def simplify_text(text: str):
@@ -43,25 +49,25 @@ def simplify_text(text: str):
         "temperature": 0.2
     }
 
-    response = requests.post(API_URL, headers=HEADERS, json=payload)
-
-    if response.status_code == 200:
+    try:
+        response = requests.post(API_URL, headers=HEADERS, json=payload)
+        response.raise_for_status()  # Raises an error for non-200 status codes
         data = response.json()
         return data.get("choices", [{}])[0].get("message", {}).get("content", "No response generated.")
-    else:
-        error_message = response.json().get("error", {}).get("message", "Unknown error")
-        raise HTTPException(status_code=response.status_code, detail=error_message)
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(status_code=500, detail=f"Error calling Together.AI: {str(e)}")
 
 # ✅ Function to convert simplified text to speech
 def text_to_speech(text: str):
     filename = f"audio_{uuid.uuid4()}.mp3"
-    filepath = os.path.join("static", filename)
+    filepath = os.path.join(STATIC_DIR, filename)
 
-    # Generate speech
-    tts = gTTS(text=text, lang="en")
-    tts.save(filepath)
-
-    return f"/static/{filename}"
+    try:
+        tts = gTTS(text=text, lang="en")
+        tts.save(filepath)
+        return f"/static/{filename}"
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Text-to-speech failed: {str(e)}")
 
 # ✅ API Endpoint to simplify text
 @app.post("/simplify")
@@ -79,5 +85,5 @@ def get_simplified_audio(request: TextRequest):
 # ✅ Run the app for Render (Dynamic Port Handling)
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("PORT", 8000))  # Default to 8000 if PORT is not set
+    port = int(os.environ.get("PORT", 10000))  # Render sets PORT dynamically
     uvicorn.run(app, host="0.0.0.0", port=port)
