@@ -6,6 +6,17 @@ import os
 import uuid
 from gtts import gTTS
 from dotenv import load_dotenv
+from fastapi.middleware.cors import CORSMiddleware
+
+# ✅ Allow Flutter (Frontend) to communicate with FastAPI
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change to your frontend URL if deployed
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 # ✅ Load environment variables
 load_dotenv()
