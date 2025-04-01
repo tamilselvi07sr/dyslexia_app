@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 gradle-wrapper.jar
 /.gradle
 /captures/
@@ -13,9 +12,3 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
-=======
-venv/
-__pycache__/
-.env
-*.mp3
->>>>>>> 11d0d7d1960c06c29117cfed18132b889f9198c6
