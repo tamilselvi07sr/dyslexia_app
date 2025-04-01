@@ -1,0 +1,15 @@
+name: dyslexia_app  # Replace with your app's actual name
+description: A Flutter app to help with dyslexia.
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"  # Set Dart SDK version range
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^0.13.6
+  audioplayers: ^5.2.0  # For playing audio
+
+flutter:
+  uses-material-design: true
